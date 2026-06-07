@@ -11,7 +11,7 @@ const GOAL_LABELS: Record<string, string> = {
   performance: "Melhorar performance atlética",
 };
 
-export async function POST(requestu: Request) {
+export async function POST(request: Request) {
   try {
     if (!process.env.ANTHROPIC_API_KEY) {
       return NextResponse.json({ error: "ANTHROPIC_API_KEY não configurada" }, { status: 500 });

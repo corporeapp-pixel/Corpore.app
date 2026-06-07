@@ -288,4 +288,108 @@ export default function Home() {
   const [step, setStep] = useState<"form" | "loading" | "results" | "error">("form");
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [errorMsg, setErrorMsg] = useState("");
-  const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0
+  const [loadingMsg, setLoadingMsg] = useState(LOADING_MSGS[0]);
+  const [weight,setWeight]=useState("");
+  const [height,setHeight]=useState("");
+  const [waist,setWaist]=useState("");
+  const [age,setAge]=useState("");
+  const [gender,setGender]=useState("");
+  const [goal,setGoal]=useState("");
+  const [photos,setPhotos]=useState<Photos>({frontal:null,lateral:null,posterior:null});
+
+  const valid=weight&&height&&waist&&goal&&photos.frontal&&photos.lateral&&photos.posterior;
+  const imc=weight&&height?(parseFloat(weight)/Math.pow(parseFloat(height)/100,2)).toFixed(1):null;
+  const photoCount=Object.values(photos).filter(Boolean).length;
+
+  const submit=async()=>{
+    setStep("loading");let i=0;
+    const iv=setInterval(()=>{if(i<LOADING_MSGS.length-1)setLoadingMsg(LOADING_MSGS[++i]);},2800);
+    try {
+      const [frontUrl,sideUrl,backUrl]=await Promise.all([fileToDataUrl(photos.frontal!),fileToDataUrl(photos.lateral!),fileToDataUrl(photos.posterior!)]);
+      const res=await fetch("/api/analyze",{method:"POST",headers:{"Content-Type":"application/json"},body:JSON.stringify({weight:parseFloat(weight),height:parseFloat(height),waist:parseFloat(waist),age:age?parseInt(age):undefined,gender:gender||undefined,goal,images:{front:frontUrl,side:sideUrl,back:backUrl}})});
+      clearInterval(iv);
+      const data=await res.json();
+      if(!res.ok)throw new Error(data.error||`Erro ${res.status}`);
+      setResults(data);setStep("results");
+    } catch(err){clearInterval(iv);setErrorMsg(err instanceof Error?err.message:"Erro inesperado");setStep("error");}
+  };
+
+  const reset=()=>{setStep("form");setResults(null);setErrorMsg("");setWeight("");setHeight("");setWaist("");setAge("");setGender("");setGoal("");setPhotos({frontal:null,lateral:null,posterior:null});};
+
+  return (
+    <div style={{minHeight:"100vh",background:"#0c0c0c",color:"#f5f5f5",paddingBottom:80}}>
+      <nav style={{padding:"0 40px",height:64,display:"flex",alignItems:"center",justifyContent:"space-between",borderBottom:"1px solid rgba(255,255,255,0.07)",position:"sticky",top:0,background:"rgba(12,12,12,0.93)",backdropFilter:"blur(20px)",zIndex:100}}>
+        <div style={{display:"flex",alignItems:"center",gap:12}}>
+          <CorporeLogo size={36}/>
+          <svg width="130" height="20" viewBox="0 0 260 40" fill="none"><text x="0" y="34" fontFamily="'Barlow Condensed','Arial Narrow',sans-serif" fontSize="42" fontWeight="700" letterSpacing="4" fill="#f5f5f5">CORPORE</text><rect x="219" y="17" width="24" height="3.5" rx="1.5" fill="#c8f645"/><rect x="219" y="24" width="18" height="3" rx="1.5" fill="#c8f645"/></svg>
+        </div>
+        <div style={{display:"flex",alignItems:"center",gap:8}}>
+          <span style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase"}}>FITNESS · NUTRITION · INTELLIGENCE</span>
+          <div style={{width:6,height:6,borderRadius:"50%",background:"#c8f645",boxShadow:"0 0 8px #c8f645"}}/>
+        </div>
+      </nav>
+      <div style={{maxWidth:920,margin:"0 auto",padding:"52px 24px 0"}}>
+        {step==="form"&&(<>
+          <div style={{marginBottom:44,animation:"fadeIn 0.5s ease"}}>
+            <div style={{display:"inline-flex",alignItems:"center",gap:8,padding:"5px 14px",borderRadius:100,background:"rgba(200,246,69,0.08)",border:"1px solid rgba(200,246,69,0.18)",marginBottom:20}}>
+              <div style={{width:5,height:5,borderRadius:"50%",background:"#c8f645",boxShadow:"0 0 6px #c8f645"}}/>
+              <span style={{fontSize:11,color:"#c8f645",fontWeight:700,letterSpacing:2,textTransform:"uppercase"}}>Análise Corporal com IA</span>
+            </div>
+            <h1 style={{fontSize:"clamp(38px,5.5vw,62px)",fontWeight:800,fontFamily:"'Barlow Condensed',sans-serif",lineHeight:1.05,letterSpacing:-1,marginBottom:16}}>SEU CORPO.<br/><span style={{color:"#c8f645"}}>ANALISADO EM SEGUNDOS.</span></h1>
+            <p style={{color:"rgba(255,255,255,0.38)",fontSize:15,maxWidth:480,lineHeight:1.7}}>Envie 3 fotos corporais, informe seus dados e receba análise detalhada de composição corporal, postura, treino e nutrição personalizada.</p>
+          </div>
+          <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:20}}>
+            <div style={{background:"#141414",borderRadius:22,padding:32,border:"1px solid rgba(255,255,255,0.07)"}}>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(255,255,255,0.38)",marginBottom:26}}>Dados Corporais</div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                <div><label style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>Peso (kg)</label><input type="number" placeholder="70" value={weight} onChange={e=>setWeight(e.target.value)} style={inp}/></div>
+                <div><label style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>Altura (cm)</label><input type="number" placeholder="170" value={height} onChange={e=>setHeight(e.target.value)} style={inp}/></div>
+              </div>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr",gap:14,marginBottom:14}}>
+                <div><label style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>Cintura (cm)</label><input type="number" placeholder="80" value={waist} onChange={e=>setWaist(e.target.value)} style={inp}/></div>
+                <div><label style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>Idade</label><input type="number" placeholder="25" value={age} onChange={e=>setAge(e.target.value)} style={inp}/></div>
+              </div>
+              <div style={{marginBottom:14}}><label style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>Sexo</label><select value={gender} onChange={e=>setGender(e.target.value)} style={{...inp,appearance:"none",cursor:"pointer"}}><option value="">Prefiro não informar</option><option value="masculino">Masculino</option><option value="feminino">Feminino</option></select></div>
+              <div style={{marginBottom:20}}><label style={{fontSize:10,color:"rgba(255,255,255,0.38)",letterSpacing:1.5,textTransform:"uppercase",display:"block",marginBottom:7,fontWeight:600}}>Objetivo *</label><select value={goal} onChange={e=>setGoal(e.target.value)} style={{...inp,appearance:"none",cursor:"pointer"}}><option value="">Selecione seu objetivo</option>{GOALS.map(g=><option key={g.value} value={g.value}>{g.label}</option>)}</select></div>
+              {imc&&<div style={{padding:"11px 16px",borderRadius:10,background:"rgba(200,246,69,0.06)",border:"1px solid rgba(200,246,69,0.12)",marginBottom:22,display:"flex",alignItems:"center",justifyContent:"space-between"}}><span style={{fontSize:12,color:"rgba(255,255,255,0.38)"}}>IMC calculado</span><span style={{fontSize:17,fontWeight:800,color:"#c8f645",fontFamily:"'Barlow Condensed',sans-serif"}}>{imc}</span></div>}
+              <button onClick={submit} disabled={!valid} style={{width:"100%",padding:"15px",borderRadius:12,border:"none",background:valid?"#c8f645":"rgba(255,255,255,0.05)",color:valid?"#0c0c0c":"rgba(255,255,255,0.18)",fontSize:13,fontWeight:700,cursor:valid?"pointer":"not-allowed",fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:2,textTransform:"uppercase",transition:"all 0.2s",display:"flex",alignItems:"center",justifyContent:"center",gap:10}}>
+                {valid?<>{Icons.upload} ANALISAR MEU CORPO</>:"PREENCHA OS CAMPOS OBRIGATÓRIOS"}
+              </button>
+            </div>
+            <div style={{background:"#141414",borderRadius:22,padding:32,border:"1px solid rgba(255,255,255,0.07)"}}>
+              <div style={{fontSize:11,fontWeight:700,letterSpacing:2,textTransform:"uppercase",color:"rgba(255,255,255,0.38)",marginBottom:8}}>Fotos Corporais</div>
+              <p style={{fontSize:12,color:"rgba(255,255,255,0.25)",marginBottom:22,lineHeight:1.65}}>Use roupas justas. Boa iluminação e fundo neutro resultam em análises mais precisas.</p>
+              <div style={{display:"grid",gridTemplateColumns:"1fr 1fr 1fr",gap:12,marginBottom:18}}>
+                <PhotoZone label="Frontal" sub="De frente" file={photos.frontal} onFile={f=>setPhotos(p=>({...p,frontal:f}))}/>
+                <PhotoZone label="Lateral" sub="De lado" file={photos.lateral} onFile={f=>setPhotos(p=>({...p,lateral:f}))}/>
+                <PhotoZone label="Posterior" sub="De costas" file={photos.posterior} onFile={f=>setPhotos(p=>({...p,posterior:f}))}/>
+              </div>
+              <div style={{display:"flex",gap:6,marginBottom:10}}>
+                {(["frontal","lateral","posterior"] as const).map(k=>(
+                  <div key={k} style={{flex:1,height:3,borderRadius:3,background:photos[k]?"#c8f645":"rgba(255,255,255,0.07)",transition:"background 0.3s"}}/>
+                ))}
+              </div>
+              <p style={{fontSize:11,color:"rgba(255,255,255,0.38)",textAlign:"center",marginBottom:16}}>{photoCount} de 3 fotos selecionadas</p>
+              <div style={{padding:"11px 14px",borderRadius:10,background:"rgba(255,255,255,0.02)",border:"1px solid rgba(255,255,255,0.07)",display:"flex",alignItems:"center",gap:8}}>
+                <span style={{color:"rgba(255,255,255,0.38)"}}>{Icons.lock}</span>
+                <p style={{fontSize:11,color:"rgba(255,255,255,0.22)",margin:0}}>Suas fotos são processadas pela IA e não são armazenadas.</p>
+              </div>
+            </div>
+          </div>
+        </>)}
+        {step==="loading"&&<LoadingScreen msg={loadingMsg}/>}
+        {step==="results"&&results&&<Results data={results} onReset={reset}/>}
+        {step==="error"&&(
+          <div style={{textAlign:"center",padding:"90px 0",animation:"fadeIn 0.4s ease"}}>
+            <div style={{width:64,height:64,borderRadius:"50%",background:"rgba(251,146,60,0.1)",border:"1px solid rgba(251,146,60,0.2)",display:"flex",alignItems:"center",justifyContent:"center",margin:"0 auto 28px"}}>{Icons.warn}</div>
+            <h3 style={{fontSize:22,fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",marginBottom:12,letterSpacing:1}}>ALGO DEU ERRADO</h3>
+            <p style={{color:"rgba(255,255,255,0.38)",marginBottom:36,maxWidth:480,margin:"0 auto 36px",lineHeight:1.65,fontSize:13}}>{errorMsg}</p>
+            <button onClick={reset} style={{display:"inline-flex",alignItems:"center",gap:8,padding:"13px 28px",borderRadius:100,border:"1px solid rgba(200,246,69,0.25)",background:"rgba(200,246,69,0.07)",color:"#c8f645",cursor:"pointer",fontSize:13,fontWeight:700,fontFamily:"'Barlow Condensed',sans-serif",letterSpacing:1.5,textTransform:"uppercase"}}>
+              {Icons.refresh} TENTAR NOVAMENTE
+            </button>
+          </div>
+        )}
+      </div>
+    </div>
+  );
+}
