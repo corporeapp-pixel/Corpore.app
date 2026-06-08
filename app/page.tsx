@@ -38,10 +38,18 @@ const LOADING_MSGS = [
 
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((res, rej) => {
-    const r = new FileReader();
-    r.onload = () => res(r.result as string);
-    r.onerror = () => rej(new Error("Falha ao ler imagem"));
-    r.readAsDataURL(file as Blob);
+    const canvas = document.createElement("canvas");
+    const img = new Image();
+    const url = URL.createObjectURL(file);
+    img.onload = () => {
+      canvas.width = img.width;
+      canvas.height = img.height;
+      canvas.getContext("2d")!.drawImage(img, 0, 0);
+      URL.revokeObjectURL(url);
+      res(canvas.toDataURL("image/jpeg", 0.85));
+    };
+    img.onerror = () => rej(new Error("Falha ao processar imagem"));
+    img.src = url;
   });
 }
 
