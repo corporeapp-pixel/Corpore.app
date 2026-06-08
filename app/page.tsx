@@ -41,7 +41,7 @@ function fileToDataUrl(file: File): Promise<string> {
     const r = new FileReader();
     r.onload = () => res(r.result as string);
     r.onerror = () => rej(new Error("Falha ao ler imagem"));
-    r.readAsDataURL(file);
+    r.readAsDataURL(file as Blob);
   });
 }
 
