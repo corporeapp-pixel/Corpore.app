@@ -39,9 +39,14 @@ const LOADING_MSGS = [
 function fileToDataUrl(file: File): Promise<string> {
   return new Promise((res, rej) => {
     const reader = new FileReader();
-    reader.onload = () => res(reader.result as string);
-    reader.onerror = () => rej(new Error("Falha ao ler imagem"));
-    reader.readAsDataURL(file);
+    reader.onload = () => {
+      try {
+        const result = reader.result as string;
+        res(result);
+      } catch(e) { rej(e); }
+    };
+    reader.onerror = () => rej(new Error("Falha ao ler: " + (reader.error?.message || "erro desconhecido")));
+    try { reader.readAsDataURL(file); } catch(e) { rej(new Error("HEIC nao suportado. Use JPEG ou PNG.")); }
   });
 }
 
