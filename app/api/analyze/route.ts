@@ -39,9 +39,9 @@ export async function POST(request: Request) {
       messages: [{
         role: "user",
         content: [
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: clean(front) } },
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: clean(side) } },
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: clean(back) } },
+          { type: "image", source: { type: "base64", media_type: (front.split(";")[0].split(":")[1] || "image/jpeg") as any, data: front.split(",")[1] } },
+          { type: "image", source: { type: "base64", media_type: (side.split(";")[0].split(":")[1] || "image/jpeg") as any, data: side.split(",")[1] } },
+          { type: "image", source: { type: "base64", media_type: (back.split(";")[0].split(":")[1] || "image/jpeg") as any, data: back.split(",")[1] } },
           { type: "text", text: `Analise estas 3 fotos corporais. Dados: peso ${weight}kg, altura ${height}cm, cintura ${waist}cm${age ? `, idade ${age}` : ""}${gender ? `, sexo ${gender}` : ""}, objetivo: ${GOAL_LABELS[goal] || goal}. Responda APENAS com JSON válido sem markdown:\n{"body_fat_range":"x-y%","physique_summary":"...","strengths":["..."],"weaknesses":["..."],"weekly_forecast":"...","training_recommendation":["..."],"nutrition_recommendation":["..."],"fitness_score":0-100,"posture_notes":"...","body_type":"..."}` }
         ]
       }]
