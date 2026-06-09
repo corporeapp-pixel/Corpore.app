@@ -15,7 +15,6 @@ export async function POST(request: Request) {
   if (!process.env.ANTHROPIC_API_KEY) {
     return NextResponse.json({ error: "ANTHROPIC_API_KEY não configurada" }, { status: 500 });
   }
-
   try {
     const formData = await request.formData();
     const weight = formData.get("weight");
@@ -24,22 +23,15 @@ export async function POST(request: Request) {
     const age = formData.get("age");
     const gender = formData.get("gender");
     const goal = formData.get("goal") as string;
-    const front = formData.get("front") as File;
-    const side = formData.get("side") as File;
-    const back = formData.get("back") as File;
+    const front = formData.get("front") as string;
+    const side = formData.get("side") as string;
+    const back = formData.get("back") as string;
 
     if (!weight || !height || !waist || !goal || !front || !side || !back) {
       return NextResponse.json({ error: "Todos os campos e fotos são obrigatórios" }, { status: 400 });
     }
 
-    const toBase64 = async (file: File) => {
-      const buf = await file.arrayBuffer();
-      return Buffer.from(buf).toString("base64");
-    };
-
-    const [frontB64, sideB64, backB64] = await Promise.all([
-      toBase64(front), toBase64(side), toBase64(back)
-    ]);
+    const clean = (s: string) => s.replace(/\s/g, "");
 
     const response = await client.messages.create({
       model: "claude-sonnet-4-5",
@@ -47,9 +39,9 @@ export async function POST(request: Request) {
       messages: [{
         role: "user",
         content: [
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: frontB64 } },
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: sideB64 } },
-          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: backB64 } },
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: clean(front) } },
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: clean(side) } },
+          { type: "image", source: { type: "base64", media_type: "image/jpeg", data: clean(back) } },
           { type: "text", text: `Analise estas 3 fotos corporais. Dados: peso ${weight}kg, altura ${height}cm, cintura ${waist}cm${age ? `, idade ${age}` : ""}${gender ? `, sexo ${gender}` : ""}, objetivo: ${GOAL_LABELS[goal] || goal}. Responda APENAS com JSON válido sem markdown:\n{"body_fat_range":"x-y%","physique_summary":"...","strengths":["..."],"weaknesses":["..."],"weekly_forecast":"...","training_recommendation":["..."],"nutrition_recommendation":["..."],"fitness_score":0-100,"posture_notes":"...","body_type":"..."}` }
         ]
       }]
