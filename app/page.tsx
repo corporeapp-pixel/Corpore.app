@@ -132,7 +132,7 @@ export default function Home() {
     setStep("loading");let i=0;
     const iv=setInterval(()=>{if(i<LOADING_MSGS.length-1)setLoadingMsg(LOADING_MSGS[++i]);},2800);
     try {
-      const toB64=(f:File):Promise<string>=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok((r.result as string).replace(/^data:[^,]+,/,""));r.onerror=()=>no(new Error("Erro ao ler foto"));r.readAsDataURL(f);});
+      const toB64=(f:File):Promise<string>=>new Promise((ok,no)=>{const r=new FileReader();r.onload=()=>ok(r.result as string);r.onerror=()=>no(new Error("Erro ao ler foto"));r.readAsDataURL(f);});
       const [f1,f2,f3]=await Promise.all([toB64(photos.frontal!),toB64(photos.lateral!),toB64(photos.posterior!)]);
       const fd=new FormData();
       fd.append("weight",weight);fd.append("height",height);fd.append("waist",waist);
