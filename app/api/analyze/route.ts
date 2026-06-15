@@ -24,6 +24,7 @@ export async function POST(request: Request) {
     const gender = formData.get("gender");
     const goal = formData.get("goal") as string;
     const front = formData.get("front") as string;
+    console.log("FRONT PREFIX:", front?.substring(0, 50));
     const side = formData.get("side") as string;
     const back = formData.get("back") as string;
 

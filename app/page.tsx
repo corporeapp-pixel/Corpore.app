@@ -227,4 +227,5 @@ export default function Home() {
     </div>
     <style>{`@keyframes spin{from{transform:rotate(0deg)}to{transform:rotate(360deg)}}@keyframes fadeIn{from{opacity:0;transform:translateY(10px)}to{opacity:1;transform:translateY(0)}}`}</style>
   </div>;
-}
+}git add app/api/analyze/route.ts app/page.tsx && git commit -m "debug: log front prefix" && git push
+
